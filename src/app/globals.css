@@ -8,25 +8,25 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
+    --background: 0 0% 94.1%; /* #F0F0F0 Very light gray */
+    --foreground: 0 0% 3.9%; /* Default dark text, good contrast */
+    --card: 0 0% 100%; /* White cards */
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
+    --primary: 210 40% 60%; /* #6699CC Moderate desaturated blue */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --secondary: 0 0% 90%; /* Slightly darker gray for secondary elements */
     --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
+    --muted: 0 0% 90%; /* Muted elements, same as secondary for this theme */
     --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --accent: 270 40% 60%; /* #9966CC Muted violet */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
+    --destructive: 0 84.2% 60.2%; /* Default red */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 0 0% 87%; /* Border color, slightly darker than background */
+    --input: 0 0% 87%; /* Input background, same as border for subtle inputs */
+    --ring: 210 40% 60%; /* Ring color (focus), use primary */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -43,25 +43,26 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
+    /* Keeping dark mode defaults, can be customized if needed */
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 210 40% 70%; /* Lighter blue for dark mode */
+    --primary-foreground: 0 0% 9%; 
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 270 40% 70%; /* Lighter violet for dark mode */
+    --accent-foreground: 0 0% 9%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --ring: 210 40% 70%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
