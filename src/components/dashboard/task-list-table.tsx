@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Task, TaskStatus } from "@/lib/schemas";
+import { Task, TaskStatus, taskTypeOptions, TaskType } from "@/lib/schemas";
 import {
   ArrowUpDown,
   Edit3,
@@ -21,7 +22,14 @@ import {
   Circle,
   Filter,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  CalendarIcon,
+  Phone,
+  Mail,
+  Users,
+  Reply,
+  Bell,
+  ClipboardList
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,6 +42,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface TaskListTableProps {
   tasks: Task[];
@@ -44,6 +53,15 @@ interface TaskListTableProps {
 
 type SortableColumn = keyof Pick<Task, "date_created" | "entity_name" | "task_type" | "status">;
 
+const taskTypeIconMap: Record<TaskType, React.ElementType> = {
+  "Call": Phone,
+  "Email": Mail,
+  "Meeting": Users,
+  "Follow-up": Reply,
+  "Reminder": Bell,
+  "Other": ClipboardList,
+};
+
 export function TaskListTable({
   tasks,
   onEditTask,
@@ -53,9 +71,9 @@ export function TaskListTable({
   const [filters, setFilters] = useState({
     date: null as Date | null,
     entity_name: "",
-    task_type: "",
+    task_type: "all", // "all" or a specific TaskType
     contact_person: "",
-    status: "all",
+    status: "all", // "all", "open", "closed"
   });
 
   const [sortConfig, setSortConfig] = useState<{
@@ -94,7 +112,7 @@ export function TaskListTable({
       return (
         (!filterDate || taskDate === filterDate) &&
         task.entity_name.toLowerCase().includes(filters.entity_name.toLowerCase()) &&
-        task.task_type.toLowerCase().includes(filters.task_type.toLowerCase()) &&
+        (filters.task_type === "all" || task.task_type === filters.task_type) &&
         task.contact_person.toLowerCase().includes(filters.contact_person.toLowerCase()) &&
         (filters.status === "all" || task.status === filters.status)
       );
@@ -107,7 +125,9 @@ export function TaskListTable({
         const valB = b[sortConfig.key];
 
         let comparison = 0;
-        if (typeof valA === 'string' && typeof valB === 'string') {
+        if (sortConfig.key === "date_created") {
+          comparison = new Date(valA).getTime() - new Date(valB).getTime();
+        } else if (typeof valA === 'string' && typeof valB === 'string') {
           comparison = valA.localeCompare(valB);
         } else if (valA > valB) {
           comparison = 1;
@@ -123,17 +143,24 @@ export function TaskListTable({
   }, [tasks, filters, sortConfig]);
 
   return (
-    <Card className="shadow-lg rounded-xl">
-      <CardHeader className="border-b p-4">
-        <CardTitle className="text-xl font-semibold flex items-center">
-            <Filter className="mr-2 h-5 w-5 text-primary" /> Filters & Sorting
+    <Card className="shadow-xl rounded-xl overflow-hidden">
+      <CardHeader className="border-b p-4 bg-card">
+        <CardTitle className="text-xl font-semibold flex items-center text-primary">
+            <Filter className="mr-2 h-5 w-5" /> Filters & Sorting
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6 p-4 border rounded-lg bg-card shadow">
+      <CardContent className="p-4 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 border rounded-lg bg-background shadow-sm">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal h-10",
+                  !filters.date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
                 {filters.date ? format(filters.date, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
@@ -152,12 +179,28 @@ export function TaskListTable({
             onChange={(e) => handleFilterChange("entity_name", e.target.value)}
             className="h-10"
           />
-          <Input
-            placeholder="Task Type"
+           <Select
             value={filters.task_type}
-            onChange={(e) => handleFilterChange("task_type", e.target.value)}
-            className="h-10"
-          />
+            onValueChange={(value) => handleFilterChange("task_type", value)}
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Task Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {taskTypeOptions.map((option) => {
+                const Icon = taskTypeIconMap[option.value as TaskType];
+                return (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center">
+                      {Icon && <Icon className="mr-2 h-4 w-4 text-muted-foreground" />}
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
           <Input
             placeholder="Contact Person"
             value={filters.contact_person}
@@ -179,66 +222,71 @@ export function TaskListTable({
           </Select>
         </div>
 
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-md border shadow-sm">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead onClick={() => requestSort("date_created")} className="cursor-pointer hover:bg-muted transition-colors">
-                  <div className="flex items-center">Date Created <SortIndicator columnKey="date_created" /></div>
+                <TableHead onClick={() => requestSort("date_created")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                  <div className="flex items-center font-semibold">Date Created <SortIndicator columnKey="date_created" /></div>
                 </TableHead>
-                <TableHead onClick={() => requestSort("entity_name")} className="cursor-pointer hover:bg-muted transition-colors">
-                  <div className="flex items-center">Entity Name <SortIndicator columnKey="entity_name" /></div>
+                <TableHead onClick={() => requestSort("entity_name")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                  <div className="flex items-center font-semibold">Entity Name <SortIndicator columnKey="entity_name" /></div>
                 </TableHead>
-                <TableHead onClick={() => requestSort("task_type")} className="cursor-pointer hover:bg-muted transition-colors">
-                  <div className="flex items-center">Task Type <SortIndicator columnKey="task_type" /></div>
+                <TableHead onClick={() => requestSort("task_type")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                  <div className="flex items-center font-semibold">Task Type <SortIndicator columnKey="task_type" /></div>
                 </TableHead>
-                <TableHead>Task Time</TableHead>
-                <TableHead>Contact Person</TableHead>
-                <TableHead onClick={() => requestSort("status")} className="cursor-pointer hover:bg-muted transition-colors">
-                   <div className="flex items-center">Status <SortIndicator columnKey="status" /></div>
+                <TableHead className="p-3 font-semibold">Task Time</TableHead>
+                <TableHead className="p-3 font-semibold">Contact Person</TableHead>
+                <TableHead onClick={() => requestSort("status")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                   <div className="flex items-center font-semibold">Status <SortIndicator columnKey="status" /></div>
                 </TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="p-3 font-semibold">Tags</TableHead>
+                <TableHead className="text-right p-3 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAndSortedTasks.length > 0 ? (
                 filteredAndSortedTasks.map((task) => (
-                  <TableRow key={task.id} className="hover:bg-muted/20 transition-colors">
-                    <TableCell>{format(new Date(task.date_created), "MMM d, yyyy")}</TableCell>
-                    <TableCell className="font-medium">{task.entity_name}</TableCell>
-                    <TableCell>{task.task_type}</TableCell>
-                    <TableCell>{task.task_time}</TableCell>
-                    <TableCell>{task.contact_person}</TableCell>
-                    <TableCell>
+                  <TableRow key={task.id} className="hover:bg-muted/30 transition-colors">
+                    <TableCell className="p-3">{format(new Date(task.date_created), "MMM d, yyyy")}</TableCell>
+                    <TableCell className="font-medium p-3">{task.entity_name}</TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center">
+                        {React.createElement(taskTypeIconMap[task.task_type as TaskType] || ClipboardList, { className: "mr-2 h-4 w-4 text-muted-foreground" })}
+                        {task.task_type}
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3">{task.task_time}</TableCell>
+                    <TableCell className="p-3">{task.contact_person}</TableCell>
+                    <TableCell className="p-3">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onToggleStatus(task.id)}
-                        className="flex items-center gap-1 px-2 py-1"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted"
                         aria-label={`Toggle status for ${task.entity_name}, current status ${task.status}`}
                       >
                         {task.status === "open" ? (
-                          <Circle className="h-4 w-4 text-green-500" />
+                          <Circle className="h-3.5 w-3.5 text-green-600 fill-green-600" />
                         ) : (
-                          <CheckCircle2 className="h-4 w-4 text-red-500" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-red-600" />
                         )}
-                        <span className="capitalize">{task.status}</span>
+                        <span className="capitalize text-sm font-medium">{task.status}</span>
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="p-3">
                       <div className="flex flex-wrap gap-1 max-w-xs">
-                        {task.tags.slice(0,3).map((tag) => ( // Show max 3 tags for brevity
-                          <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0.5 shadow-sm">{tag}</Badge>
+                        {task.tags.slice(0,3).map((tag) => ( 
+                          <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">{tag}</Badge>
                         ))}
-                        {task.tags.length > 3 && <Badge variant="outline" className="text-xs px-1.5 py-0.5 shadow-sm">+{task.tags.length - 3}</Badge>}
+                        {task.tags.length > 3 && <Badge variant="outline" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">+{task.tags.length - 3}</Badge>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => onEditTask(task)} className="h-8 w-8 hover:bg-accent hover:text-accent-foreground" aria-label={`Edit task ${task.entity_name}`}>
+                    <TableCell className="text-right space-x-1 p-3">
+                      <Button variant="outline" size="icon" onClick={() => onEditTask(task)} className="h-8 w-8 hover:bg-accent hover:text-accent-foreground rounded-md border-border" aria-label={`Edit task ${task.entity_name}`}>
                         <Edit3 className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="icon" onClick={() => onDeleteTask(task.id)} className="h-8 w-8" aria-label={`Delete task ${task.entity_name}`}>
+                      <Button variant="destructive" size="icon" onClick={() => onDeleteTask(task.id)} className="h-8 w-8 rounded-md" aria-label={`Delete task ${task.entity_name}`}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -246,7 +294,7 @@ export function TaskListTable({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground p-3">
                     No tasks found. Try adjusting your filters or creating a new task!
                   </TableCell>
                 </TableRow>
@@ -258,3 +306,4 @@ export function TaskListTable({
     </Card>
   );
 }
+
