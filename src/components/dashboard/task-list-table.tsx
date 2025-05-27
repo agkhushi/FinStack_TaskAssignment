@@ -23,11 +23,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   ArrowUpDown,
   Edit3,
   Trash2,
-  CheckCircle2,
-  Circle,
   Filter,
   ArrowUp,
   ArrowDown,
@@ -51,7 +54,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -60,7 +63,7 @@ interface TaskListTableProps {
   tasks: Task[];
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
-  onToggleStatus: (taskId: string) => void;
+  onChangeStatus: (taskId: string, newStatus: TaskStatus) => void;
   onDuplicateTask: (task: Task) => void;
 }
 
@@ -87,7 +90,7 @@ export function TaskListTable({
   tasks,
   onEditTask,
   onDeleteTask,
-  onToggleStatus,
+  onChangeStatus,
   onDuplicateTask,
 }: TaskListTableProps) {
   const [filters, setFilters] = useState<FiltersState>({
@@ -331,20 +334,36 @@ export function TaskListTable({
                     <TableCell className="p-3">{task.task_time}</TableCell>
                     <TableCell className="p-3">{task.contact_person}</TableCell>
                     <TableCell className="p-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onToggleStatus(task.id)}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted"
-                        aria-label={`Toggle status for ${task.entity_name}, current status ${task.status}`}
-                      >
-                        {task.status === "open" ? (
-                          <Circle className="h-3.5 w-3.5 text-green-600 fill-green-600" />
-                        ) : (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-red-600" />
-                        )}
-                        <span className="capitalize text-sm font-medium">{task.status}</span>
-                      </Button>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="link" className="capitalize text-sm font-medium p-0 h-auto hover:no-underline hover:text-primary">
+                             {task.status}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                          <div className="flex flex-col space-y-1 items-center">
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">STATUS</p>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant={task.status === 'open' ? 'default' : 'outline'}
+                                onClick={() => { if (task.status !== 'open') onChangeStatus(task.id, 'open')}}
+                                className={cn("px-3 py-1 h-auto text-xs", task.status === 'open' ? 'bg-primary text-primary-foreground' : '')}
+                              >
+                                Open
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={task.status === 'closed' ? 'default' : 'outline'}
+                                onClick={() => { if (task.status !== 'closed') onChangeStatus(task.id, 'closed')}}
+                                className={cn("px-3 py-1 h-auto text-xs", task.status === 'closed' ? 'bg-primary text-primary-foreground' : '')}
+                              >
+                                Closed
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </TableCell>
                     <TableCell className="p-3">
                       <div className="flex flex-wrap gap-1 max-w-xs">
@@ -371,9 +390,9 @@ export function TaskListTable({
                             <Copy className="mr-2 h-4 w-4" />
                             Duplicate
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onToggleStatus(task.id)}>
+                          <DropdownMenuItem onClick={() => onChangeStatus(task.id, task.status === 'open' ? 'closed' : 'open')}>
                             <Repeat className="mr-2 h-4 w-4" />
-                            Change status to {task.status === "open" ? "Closed" : "Open"}
+                            Change to {task.status === "open" ? "Closed" : "Open"}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem

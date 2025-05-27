@@ -87,7 +87,7 @@ export default function DashboardPage() {
   const handleSubmitTask = (taskData: Task) => {
     const isTaskAlreadyExists = tasks.some(t => t.id === taskData.id);
 
-    if (isTaskAlreadyExists && editingTask) { // Ensure editingTask is not null for safety, though isTaskAlreadyExists implies it
+    if (isTaskAlreadyExists && editingTask) { 
       setTasks(tasks.map((t) => (t.id === taskData.id ? taskData : t)));
        toast({
         title: "Task Updated",
@@ -119,17 +119,17 @@ export default function DashboardPage() {
     }
   };
 
-  const handleToggleStatus = (taskId: string) => {
+  const handleChangeStatus = (taskId: string, newStatus: TaskStatus) => {
     setTasks(
       tasks.map((task) =>
         task.id === taskId
-          ? { ...task, status: task.status === "open" ? "closed" : ("open" as TaskStatus) }
+          ? { ...task, status: newStatus }
           : task
       )
     );
     toast({
       title: "Status Updated",
-      description: "Task status has been toggled.",
+      description: `Task status has been changed to ${newStatus}.`,
     });
   };
   
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       id: uuidv4(),
       date_created: new Date().toISOString(),
       entity_name: `${taskToDuplicate.entity_name} (Copy)`,
-      status: 'open', // Default status for a duplicated task
+      status: 'open', 
     };
     setEditingTask(newTaskData);
     setIsFormOpen(true);
@@ -175,7 +175,7 @@ export default function DashboardPage() {
           tasks={tasks}
           onEditTask={handleOpenFormForEdit}
           onDeleteTask={handleDeleteTask}
-          onToggleStatus={handleToggleStatus}
+          onChangeStatus={handleChangeStatus}
           onDuplicateTask={handleDuplicateTask}
         />
       </main>
