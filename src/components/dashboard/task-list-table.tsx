@@ -15,6 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Task, TaskStatus, taskTypeOptions, TaskType } from "@/lib/schemas";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowUpDown,
   Edit3,
   Trash2,
@@ -31,6 +39,9 @@ import {
   Bell,
   ClipboardList,
   XIcon,
+  ChevronDown,
+  Copy,
+  Repeat,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,6 +61,7 @@ interface TaskListTableProps {
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onToggleStatus: (taskId: string) => void;
+  onDuplicateTask: (task: Task) => void;
 }
 
 type SortableColumn = keyof Pick<Task, "date_created" | "entity_name" | "task_type" | "status">;
@@ -76,6 +88,7 @@ export function TaskListTable({
   onEditTask,
   onDeleteTask,
   onToggleStatus,
+  onDuplicateTask,
 }: TaskListTableProps) {
   const [filters, setFilters] = useState<FiltersState>({
     date: null,
@@ -177,7 +190,7 @@ export function TaskListTable({
       items.push({ name: "Contact", value: filters.contact_person, key: "contact_person" as keyof FiltersState });
     }
     if (filters.status !== "all") {
-      items.push({ name: "Status", value: filters.status, key: "status" as keyof FiltersState });
+      items.push({ name: "Status", value: filters.status.charAt(0).toUpperCase() + filters.status.slice(1), key: "status" as keyof FiltersState });
     }
     return items;
   }, [filters]);
@@ -342,12 +355,36 @@ export function TaskListTable({
                       </div>
                     </TableCell>
                     <TableCell className="text-right space-x-1 p-3">
-                      <Button variant="outline" size="icon" onClick={() => onEditTask(task)} className="h-8 w-8 hover:bg-accent hover:text-accent-foreground rounded-md border-border" aria-label={`Edit task ${task.entity_name}`}>
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => onDeleteTask(task.id)} className="h-8 w-8 rounded-md" aria-label={`Delete task ${task.entity_name}`}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 px-3 rounded-md border-border">
+                            Options <ChevronDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>OPTIONS</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onEditTask(task)}>
+                            <Edit3 className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onDuplicateTask(task)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onToggleStatus(task.id)}>
+                            <Repeat className="mr-2 h-4 w-4" />
+                            Change status to {task.status === "open" ? "Closed" : "Open"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onDeleteTask(task.id)}
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -365,3 +402,4 @@ export function TaskListTable({
     </Card>
   );
 }
+

@@ -19,13 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { v4 as uuidv4 } from "uuid";
 
 const initialTasks: Task[] = [
   {
     id: 'aa2c69a3-9269-4a68-9196-11b509c9ef8a',
     date_created: new Date(Date.UTC(2023, 10, 15, 10, 0)).toISOString(), 
     entity_name: 'Alpha Corp',
-    task_type: 'Call' as TaskType, // Updated
+    task_type: 'Call',
     task_time: '14:30',
     contact_person: 'John Doe',
     phone_number: '+1-555-0101',
@@ -37,7 +38,7 @@ const initialTasks: Task[] = [
     id: 'bbd8e7a2-3e7e-4f9f-8e2c-5a8d9a2e1f7b',
     date_created: new Date(Date.UTC(2023, 10, 16, 11, 30)).toISOString(),
     entity_name: 'Beta Inc',
-    task_type: 'Meeting' as TaskType, // Updated
+    task_type: 'Meeting',
     task_time: '09:00',
     contact_person: 'Jane Smith',
     phone_number: '+1-555-0102',
@@ -49,7 +50,7 @@ const initialTasks: Task[] = [
     id: 'ccf0c3b5-1d8a-4a9a-9c3a-3b5e7f1a9e2d',
     date_created: new Date(Date.UTC(2023, 10, 14, 15, 0)).toISOString(),
     entity_name: 'Gamma LLC',
-    task_type: 'Other' as TaskType, // Updated
+    task_type: 'Other',
     task_time: '16:00',
     contact_person: 'Peter Jones',
     // No phone number for this one to show optionality
@@ -84,10 +85,20 @@ export default function DashboardPage() {
   };
 
   const handleSubmitTask = (taskData: Task) => {
-    if (editingTask) {
+    const isTaskAlreadyExists = tasks.some(t => t.id === taskData.id);
+
+    if (isTaskAlreadyExists && editingTask) { // Ensure editingTask is not null for safety, though isTaskAlreadyExists implies it
       setTasks(tasks.map((t) => (t.id === taskData.id ? taskData : t)));
+       toast({
+        title: "Task Updated",
+        description: `Task "${taskData.entity_name}" has been successfully updated.`,
+      });
     } else {
       setTasks([taskData, ...tasks]);
+       toast({
+        title: "Task Created",
+        description: `Task "${taskData.entity_name}" has been successfully created.`,
+      });
     }
     setIsFormOpen(false);
     setEditingTask(null);
@@ -121,6 +132,23 @@ export default function DashboardPage() {
       description: "Task status has been toggled.",
     });
   };
+  
+  const handleDuplicateTask = (taskToDuplicate: Task) => {
+    const newTaskData: Task = {
+      ...taskToDuplicate,
+      id: uuidv4(),
+      date_created: new Date().toISOString(),
+      entity_name: `${taskToDuplicate.entity_name} (Copy)`,
+      status: 'open', // Default status for a duplicated task
+    };
+    setEditingTask(newTaskData);
+    setIsFormOpen(true);
+    toast({
+      title: "Task Duplicated",
+      description: `A copy of "${taskToDuplicate.entity_name}" was created. You are now editing the copy.`,
+    });
+  };
+
 
   if (!isClient) {
     return (
@@ -148,6 +176,7 @@ export default function DashboardPage() {
           onEditTask={handleOpenFormForEdit}
           onDeleteTask={handleDeleteTask}
           onToggleStatus={handleToggleStatus}
+          onDuplicateTask={handleDuplicateTask}
         />
       </main>
 
@@ -177,3 +206,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
