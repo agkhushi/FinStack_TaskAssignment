@@ -365,7 +365,7 @@ export function TaskListTable({
                                 </span>
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent side="top" align="start" className="max-w-md bg-popover text-popover-foreground p-2 border rounded-md shadow-lg">
+                            <TooltipContent side="top" align="start" className="max-w-xs bg-popover text-popover-foreground p-2 border rounded-md shadow-lg">
                               <p className="text-sm whitespace-pre-wrap">{task.note}</p>
                             </TooltipContent>
                           </Tooltip>
