@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Task, TaskFormInput, TaskFormInputSchema, taskTypeOptions, TaskTypeEnum } from "@/lib/schemas";
+import { Task, TaskFormInput, TaskFormInputSchema, taskTypeOptions, TaskTypeEnum, TaskType } from "@/lib/schemas";
 import { suggestTaskTagsAction } from "@/lib/actions";
 import { AlertCircle, Loader2, Sparkles, XIcon, CalendarIcon, Phone, Mail, Users, Reply, Bell, ClipboardList } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -188,7 +188,7 @@ export function TaskFormDialog({
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="entity_name"
