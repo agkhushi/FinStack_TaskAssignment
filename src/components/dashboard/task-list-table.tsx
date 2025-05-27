@@ -198,12 +198,22 @@ export function TaskListTable({
     return items;
   }, [filters]);
 
+  const isAnyFilterActive = activeFilterItems.length > 0;
+
   return (
     <Card className="shadow-xl rounded-xl overflow-hidden">
       <CardHeader className="border-b p-4 bg-card">
-        <CardTitle className="text-xl font-semibold flex items-center text-primary">
-            <Filter className="mr-2 h-5 w-5" /> Filters & Sorting
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-xl font-semibold flex items-center text-primary">
+                <Filter className="mr-2 h-5 w-5" /> Filters & Sorting
+            </CardTitle>
+            <p className="text-sm text-muted-foreground pt-1">
+              Use the controls below to filter tasks. Click on column headers to sort.
+            </p>
+          </div>
+          {/* Placeholder for potential future search bar if aligned with CardTitle */}
+        </div>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 border rounded-lg bg-background shadow-sm">
@@ -278,7 +288,7 @@ export function TaskListTable({
           </Select>
         </div>
 
-        {activeFilterItems.length > 0 && (
+        {isAnyFilterActive && (
           <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/50 shadow-inner">
             <span className="text-sm font-medium text-muted-foreground self-center mr-2">Active Filters:</span>
             {activeFilterItems.map(filter => (
@@ -410,7 +420,9 @@ export function TaskListTable({
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center text-muted-foreground p-3">
-                    No tasks found. Try adjusting your filters or creating a new task!
+                    {isAnyFilterActive
+                      ? "No tasks match your current filters. Try adjusting or clearing filters to see all tasks, or create a new task."
+                      : "Your task list is currently empty. Create your first task to get started!"}
                   </TableCell>
                 </TableRow>
               )}
