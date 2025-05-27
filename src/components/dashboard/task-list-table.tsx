@@ -29,7 +29,8 @@ import {
   Users,
   Reply,
   Bell,
-  ClipboardList
+  ClipboardList,
+  XIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,18 +63,26 @@ const taskTypeIconMap: Record<TaskType, React.ElementType> = {
   "Other": ClipboardList,
 };
 
+interface FiltersState {
+  date: Date | null;
+  entity_name: string;
+  task_type: TaskType | "all";
+  contact_person: string;
+  status: TaskStatus | "all";
+}
+
 export function TaskListTable({
   tasks,
   onEditTask,
   onDeleteTask,
   onToggleStatus,
 }: TaskListTableProps) {
-  const [filters, setFilters] = useState({
-    date: null as Date | null,
+  const [filters, setFilters] = useState<FiltersState>({
+    date: null,
     entity_name: "",
-    task_type: "all", // "all" or a specific TaskType
+    task_type: "all",
     contact_person: "",
-    status: "all", // "all", "open", "closed"
+    status: "all",
   });
 
   const [sortConfig, setSortConfig] = useState<{
@@ -81,8 +90,18 @@ export function TaskListTable({
     direction: "ascending" | "descending";
   } | null>({ key: "date_created", direction: "descending" });
 
-  const handleFilterChange = (filterName: keyof typeof filters, value: string | Date | null) => {
+  const handleFilterChange = (filterName: keyof FiltersState, value: string | Date | null) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
+  };
+
+  const clearFilter = (filterName: keyof FiltersState) => {
+    let defaultValue: string | Date | null = null;
+    if (filterName === 'task_type' || filterName === 'status') {
+      defaultValue = 'all';
+    } else if (typeof filters[filterName] === 'string') {
+      defaultValue = '';
+    }
+    handleFilterChange(filterName, defaultValue);
   };
 
   const requestSort = (key: SortableColumn) => {
@@ -141,6 +160,27 @@ export function TaskListTable({
 
     return sortableTasks;
   }, [tasks, filters, sortConfig]);
+  
+  const activeFilterItems = useMemo(() => {
+    const items = [];
+    if (filters.date) {
+      items.push({ name: "Date", value: format(filters.date, "PPP"), key: "date" as keyof FiltersState });
+    }
+    if (filters.entity_name) {
+      items.push({ name: "Entity", value: filters.entity_name, key: "entity_name" as keyof FiltersState });
+    }
+    if (filters.task_type !== "all") {
+      const typeLabel = taskTypeOptions.find(opt => opt.value === filters.task_type)?.label || filters.task_type;
+      items.push({ name: "Type", value: typeLabel, key: "task_type" as keyof FiltersState });
+    }
+    if (filters.contact_person) {
+      items.push({ name: "Contact", value: filters.contact_person, key: "contact_person" as keyof FiltersState });
+    }
+    if (filters.status !== "all") {
+      items.push({ name: "Status", value: filters.status, key: "status" as keyof FiltersState });
+    }
+    return items;
+  }, [filters]);
 
   return (
     <Card className="shadow-xl rounded-xl overflow-hidden">
@@ -149,7 +189,7 @@ export function TaskListTable({
             <Filter className="mr-2 h-5 w-5" /> Filters & Sorting
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 space-y-6">
+      <CardContent className="p-4 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 border rounded-lg bg-background shadow-sm">
           <Popover>
             <PopoverTrigger asChild>
@@ -181,7 +221,7 @@ export function TaskListTable({
           />
            <Select
             value={filters.task_type}
-            onValueChange={(value) => handleFilterChange("task_type", value)}
+            onValueChange={(value) => handleFilterChange("task_type", value as TaskType | "all")}
           >
             <SelectTrigger className="h-10">
               <SelectValue placeholder="Task Type" />
@@ -209,7 +249,7 @@ export function TaskListTable({
           />
           <Select
             value={filters.status}
-            onValueChange={(value) => handleFilterChange("status", value)}
+            onValueChange={(value) => handleFilterChange("status", value as TaskStatus | "all")}
           >
             <SelectTrigger className="h-10">
               <SelectValue placeholder="Status" />
@@ -221,6 +261,25 @@ export function TaskListTable({
             </SelectContent>
           </Select>
         </div>
+
+        {activeFilterItems.length > 0 && (
+          <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/50 shadow-inner">
+            <span className="text-sm font-medium text-muted-foreground self-center mr-2">Active Filters:</span>
+            {activeFilterItems.map(filter => (
+              <Badge key={filter.key} variant="secondary" className="py-1 px-2 text-sm shadow-sm">
+                <span className="font-semibold mr-1">{filter.name}:</span> {filter.value}
+                <button
+                  type="button"
+                  onClick={() => clearFilter(filter.key)}
+                  className="ml-1.5 p-0.5 rounded-full hover:bg-muted-foreground/20"
+                  aria-label={`Clear ${filter.name} filter`}
+                >
+                  <XIcon className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
 
         <div className="overflow-x-auto rounded-md border shadow-sm">
           <Table>
@@ -306,4 +365,3 @@ export function TaskListTable({
     </Card>
   );
 }
-
