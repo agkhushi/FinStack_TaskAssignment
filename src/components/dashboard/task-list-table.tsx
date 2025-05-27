@@ -352,10 +352,10 @@ export function TaskListTable({
                       </TableCell>
                       <TableCell className="p-3">{task.task_time}</TableCell>
                       <TableCell className="p-3">{task.contact_person}</TableCell>
-                      <TableCell className="p-3 max-w-xs">
+                      <TableCell className="p-3 max-w-[220px] overflow-hidden">
                         {task.note ? (
                           <Tooltip delayDuration={300}>
-                            <TooltipTrigger className="cursor-default text-left">
+                            <TooltipTrigger className="cursor-default text-left w-full block">
                               <div className="flex items-center">
                                 <StickyNote className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <span className="truncate">
@@ -365,7 +365,7 @@ export function TaskListTable({
                                 </span>
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent side="top" align="start" className="max-w-xs bg-popover text-popover-foreground p-2 border rounded-md shadow-lg">
+                            <TooltipContent side="top" align="start" className="max-w-[220px] bg-popover text-popover-foreground p-2 border rounded-md shadow-lg">
                               <p className="text-sm whitespace-pre-wrap">{task.note}</p>
                             </TooltipContent>
                           </Tooltip>
