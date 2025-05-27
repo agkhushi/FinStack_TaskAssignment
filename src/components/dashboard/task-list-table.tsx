@@ -28,6 +28,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   ArrowUpDown,
   Edit3,
   Trash2,
@@ -45,6 +51,7 @@ import {
   ChevronDown,
   Copy,
   Repeat,
+  StickyNote,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,6 +92,8 @@ interface FiltersState {
   contact_person: string;
   status: TaskStatus | "all";
 }
+
+const MAX_NOTE_LENGTH_IN_TABLE = 50;
 
 export function TaskListTable({
   tasks,
@@ -212,7 +221,6 @@ export function TaskListTable({
               Use the controls below to filter tasks. Click on column headers to sort.
             </p>
           </div>
-          {/* Placeholder for potential future search bar if aligned with CardTitle */}
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
@@ -306,129 +314,152 @@ export function TaskListTable({
             ))}
           </div>
         )}
-
-        <div className="overflow-x-auto rounded-md border shadow-sm">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead onClick={() => requestSort("date_created")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
-                  <div className="flex items-center font-semibold">Date Created <SortIndicator columnKey="date_created" /></div>
-                </TableHead>
-                <TableHead onClick={() => requestSort("entity_name")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
-                  <div className="flex items-center font-semibold">Entity Name <SortIndicator columnKey="entity_name" /></div>
-                </TableHead>
-                <TableHead onClick={() => requestSort("task_type")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
-                  <div className="flex items-center font-semibold">Task Type <SortIndicator columnKey="task_type" /></div>
-                </TableHead>
-                <TableHead className="p-3 font-semibold">Task Time</TableHead>
-                <TableHead className="p-3 font-semibold">Contact Person</TableHead>
-                <TableHead onClick={() => requestSort("status")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
-                   <div className="flex items-center font-semibold">Status <SortIndicator columnKey="status" /></div>
-                </TableHead>
-                <TableHead className="p-3 font-semibold">Tags</TableHead>
-                <TableHead className="text-right p-3 font-semibold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedTasks.length > 0 ? (
-                filteredAndSortedTasks.map((task) => (
-                  <TableRow key={task.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="p-3">{format(new Date(task.date_created), "MMM d, yyyy")}</TableCell>
-                    <TableCell className="font-medium p-3">{task.entity_name}</TableCell>
-                    <TableCell className="p-3">
-                      <div className="flex items-center">
-                        {React.createElement(taskTypeIconMap[task.task_type as TaskType] || ClipboardList, { className: "mr-2 h-4 w-4 text-muted-foreground" })}
-                        {task.task_type}
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-3">{task.task_time}</TableCell>
-                    <TableCell className="p-3">{task.contact_person}</TableCell>
-                    <TableCell className="p-3">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="link" className="capitalize text-sm font-medium p-0 h-auto hover:no-underline hover:text-primary">
-                             {task.status}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2">
-                          <div className="flex flex-col space-y-1 items-center">
-                            <p className="text-xs font-semibold text-muted-foreground mb-1">STATUS</p>
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant={task.status === 'open' ? 'default' : 'outline'}
-                                onClick={() => { if (task.status !== 'open') onChangeStatus(task.id, 'open')}}
-                                className={cn("px-3 py-1 h-auto text-xs", task.status === 'open' ? 'bg-primary text-primary-foreground' : '')}
-                              >
-                                Open
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant={task.status === 'closed' ? 'default' : 'outline'}
-                                onClick={() => { if (task.status !== 'closed') onChangeStatus(task.id, 'closed')}}
-                                className={cn("px-3 py-1 h-auto text-xs", task.status === 'closed' ? 'bg-primary text-primary-foreground' : '')}
-                              >
-                                Closed
-                              </Button>
+        <TooltipProvider>
+          <div className="overflow-x-auto rounded-md border shadow-sm">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead onClick={() => requestSort("date_created")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                    <div className="flex items-center font-semibold">Date Created <SortIndicator columnKey="date_created" /></div>
+                  </TableHead>
+                  <TableHead onClick={() => requestSort("entity_name")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                    <div className="flex items-center font-semibold">Entity Name <SortIndicator columnKey="entity_name" /></div>
+                  </TableHead>
+                  <TableHead onClick={() => requestSort("task_type")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                    <div className="flex items-center font-semibold">Task Type <SortIndicator columnKey="task_type" /></div>
+                  </TableHead>
+                  <TableHead className="p-3 font-semibold">Task Time</TableHead>
+                  <TableHead className="p-3 font-semibold">Contact Person</TableHead>
+                  <TableHead className="p-3 font-semibold">Notes</TableHead>
+                  <TableHead onClick={() => requestSort("status")} className="cursor-pointer hover:bg-muted/80 transition-colors p-3">
+                     <div className="flex items-center font-semibold">Status <SortIndicator columnKey="status" /></div>
+                  </TableHead>
+                  <TableHead className="p-3 font-semibold">Tags</TableHead>
+                  <TableHead className="text-right p-3 font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAndSortedTasks.length > 0 ? (
+                  filteredAndSortedTasks.map((task) => (
+                    <TableRow key={task.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="p-3">{format(new Date(task.date_created), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="font-medium p-3">{task.entity_name}</TableCell>
+                      <TableCell className="p-3">
+                        <div className="flex items-center">
+                          {React.createElement(taskTypeIconMap[task.task_type as TaskType] || ClipboardList, { className: "mr-2 h-4 w-4 text-muted-foreground" })}
+                          {task.task_type}
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-3">{task.task_time}</TableCell>
+                      <TableCell className="p-3">{task.contact_person}</TableCell>
+                      <TableCell className="p-3 max-w-xs">
+                        {task.note ? (
+                          <Tooltip delayDuration={300}>
+                            <TooltipTrigger className="cursor-default text-left">
+                              <div className="flex items-center">
+                                <StickyNote className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="truncate">
+                                  {task.note.length > MAX_NOTE_LENGTH_IN_TABLE
+                                    ? `${task.note.substring(0, MAX_NOTE_LENGTH_IN_TABLE)}...`
+                                    : task.note}
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" align="start" className="max-w-md bg-popover text-popover-foreground p-2 border rounded-md shadow-lg">
+                              <p className="text-sm whitespace-pre-wrap">{task.note}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted-foreground italic">No note</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="link" className="capitalize text-sm font-medium p-0 h-auto hover:no-underline hover:text-primary">
+                               {task.status}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2">
+                            <div className="flex flex-col space-y-1 items-center">
+                              <p className="text-xs font-semibold text-muted-foreground mb-1">STATUS</p>
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant={task.status === 'open' ? 'default' : 'outline'}
+                                  onClick={() => { if (task.status !== 'open') onChangeStatus(task.id, 'open')}}
+                                  className={cn("px-3 py-1 h-auto text-xs", task.status === 'open' ? 'bg-primary text-primary-foreground' : '')}
+                                >
+                                  Open
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant={task.status === 'closed' ? 'default' : 'outline'}
+                                  onClick={() => { if (task.status !== 'closed') onChangeStatus(task.id, 'closed')}}
+                                  className={cn("px-3 py-1 h-auto text-xs", task.status === 'closed' ? 'bg-primary text-primary-foreground' : '')}
+                                >
+                                  Closed
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {task.tags.slice(0,3).map((tag) => ( 
-                          <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">{tag}</Badge>
-                        ))}
-                        {task.tags.length > 3 && <Badge variant="outline" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">+{task.tags.length - 3}</Badge>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right space-x-1 p-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 px-3 rounded-md border-border">
-                            Options <ChevronDown className="ml-2 h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>OPTIONS</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => onEditTask(task)}>
-                            <Edit3 className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDuplicateTask(task)}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onChangeStatus(task.id, task.status === 'open' ? 'closed' : 'open')}>
-                            <Repeat className="mr-2 h-4 w-4" />
-                            Change to {task.status === "open" ? "Closed" : "Open"}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onDeleteTask(task.id)}
-                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          </PopoverContent>
+                        </Popover>
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {task.tags.slice(0,3).map((tag) => ( 
+                            <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">{tag}</Badge>
+                          ))}
+                          {task.tags.length > 3 && <Badge variant="outline" className="text-xs px-1.5 py-0.5 shadow-sm rounded-md">+{task.tags.length - 3}</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right space-x-1 p-3">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 px-3 rounded-md border-border">
+                              Options <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>OPTIONS</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => onEditTask(task)}>
+                              <Edit3 className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDuplicateTask(task)}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onChangeStatus(task.id, task.status === 'open' ? 'closed' : 'open')}>
+                              <Repeat className="mr-2 h-4 w-4" />
+                              Change to {task.status === "open" ? "Closed" : "Open"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onDeleteTask(task.id)}
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground p-3">
+                      {isAnyFilterActive
+                        ? "No tasks match your current filters. Try adjusting or clearing filters to see all tasks, or create a new task."
+                        : "Your task list is currently empty. Create your first task to get started!"}
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground p-3">
-                    {isAnyFilterActive
-                      ? "No tasks match your current filters. Try adjusting or clearing filters to see all tasks, or create a new task."
-                      : "Your task list is currently empty. Create your first task to get started!"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TooltipProvider>
       </CardContent>
     </Card>
   );
