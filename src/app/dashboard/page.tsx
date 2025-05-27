@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { TaskFormDialog } from "@/components/dashboard/task-form-dialog";
 import { TaskListTable } from "@/components/dashboard/task-list-table";
 import useLocalStorage from "@/hooks/use-local-storage";
-import { Task, TaskStatus } from "@/lib/schemas";
+import { Task, TaskStatus, TaskType } from "@/lib/schemas";
 import { PlusCircle, ListChecks } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,11 +23,12 @@ import {
 const initialTasks: Task[] = [
   {
     id: 'aa2c69a3-9269-4a68-9196-11b509c9ef8a',
-    date_created: new Date(Date.UTC(2023, 10, 15, 10, 0)).toISOString(), // Use UTC to avoid timezone issues if any
+    date_created: new Date(Date.UTC(2023, 10, 15, 10, 0)).toISOString(), 
     entity_name: 'Alpha Corp',
-    task_type: 'Follow-up Call',
+    task_type: 'Call' as TaskType, // Updated
     task_time: '14:30',
     contact_person: 'John Doe',
+    phone_number: '+1-555-0101',
     note: 'Discuss Q4 proposal and new service offerings. Emphasize cost-saving benefits and scalability of our platform. Prepare answers for potential questions regarding integration with their existing CRM.',
     status: 'open',
     tags: ['sales', 'q4', 'proposal', 'crm integration'],
@@ -35,9 +37,10 @@ const initialTasks: Task[] = [
     id: 'bbd8e7a2-3e7e-4f9f-8e2c-5a8d9a2e1f7b',
     date_created: new Date(Date.UTC(2023, 10, 16, 11, 30)).toISOString(),
     entity_name: 'Beta Inc',
-    task_type: 'Meeting Prep',
+    task_type: 'Meeting' as TaskType, // Updated
     task_time: '09:00',
     contact_person: 'Jane Smith',
+    phone_number: '+1-555-0102',
     note: 'Prepare presentation slides for the new project kickoff. Include timeline, key deliverables, and team member roles. Double-check budget allocation figures.',
     status: 'open',
     tags: ['project kickoff', 'presentation', 'budget'],
@@ -46,9 +49,10 @@ const initialTasks: Task[] = [
     id: 'ccf0c3b5-1d8a-4a9a-9c3a-3b5e7f1a9e2d',
     date_created: new Date(Date.UTC(2023, 10, 14, 15, 0)).toISOString(),
     entity_name: 'Gamma LLC',
-    task_type: 'Contract Review',
+    task_type: 'Other' as TaskType, // Updated
     task_time: '16:00',
     contact_person: 'Peter Jones',
+    // No phone number for this one to show optionality
     note: 'Review the updated terms and conditions in the client contract. Pay close attention to liability clauses and payment schedules. Consult legal if any ambiguity.',
     status: 'closed',
     tags: ['legal', 'contract', 'terms'],
@@ -119,7 +123,6 @@ export default function DashboardPage() {
   };
 
   if (!isClient) {
-    // Render a loading state or null during server-side rendering & pre-hydration
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <ListChecks className="h-12 w-12 animate-pulse text-primary" />
