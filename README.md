@@ -58,6 +58,10 @@ npm run dev
 - `/src/lib`: Utility functions and configurations
 - `/public`: Static assets
 
+## Deployment
+
+The application is live at: [https://finstacktask.netlify.app/dashboard](https://finstacktask.netlify.app/dashboard)
+
 ## Available Scripts
 
 - `npm run dev`: Start the development server
